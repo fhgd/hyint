@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
-#from mpl import *
+from scipy.integrate import cumtrapz
+
 from pylab import *
 rc('font',   size=10)
 rc('axes',   labelsize=14)
@@ -25,7 +26,7 @@ sw = True
 def f_IC(IP, UC, R):
     return IP - UC/R
 
-def integrate(IP, t, UC0, R, C):
+def integrate(IP, t, UC0, R, C, deltaUC):
     N = len(t)
     UC  = zeros(N)                          # saved UC
     E   = zeros(N)
@@ -46,35 +47,46 @@ def integrate(IP, t, UC0, R, C):
             E[n+1] = E[n]
     return UC, E
 
-def calc(R):
-    t = linspace(0, 1/f*0.5, 1e4)
+def calc(R, deltaUC):
+    t = linspace(0, 1/f, 1e4)
     IP = I*sin(2*pi*f*t)
-    UC, E = integrate(IP, t, UC0, R, C)
+    UC, E = integrate(IP, t, UC0, R, C, deltaUC)
     return UC, IP, E, t
 
 def plot_result(UC, IP, t):
     #f = figure(figsize=[7/2.54, 6/2.54])
     #ax1 = axes([0.2, 0.75, 0.7, 0.15])
+    subplots_adjust(right=0.85)
     ax1 = subplot(311)
     plot(t, IP)
-    ylabel(r'$I_P(t)$')
-    #yticks([])
+    ylabel(r'$I_\mathrm{P}$')
+    yticks([])
+    ylim(-1.2*I, 1.2*I)
 
     #ax2 = axes([0.2, 0.1, 0.7, 0.6], sharex=ax1)
     ax2 = subplot(312, sharex=ax1)
-    plot(t, UC, '.-')
-    ylabel(r'$U_C(t)$')
-    #yticks([0], [r'$0\,\mathrm{V}$'])
-    #xticks([0, pi, 2*pi, 3*pi],
-    #       [r'$0\,\mathrm{s}$', r'$T/2$', r'$T$', r'$3T/2$'])
+    plot(t, R/2.*IP, '-.', label='$U^*$')
+    plot(t, UC, label='$U$')
+    ylabel(r'$U$')
+    yticks([])
+    legend(loc=(1.02, 0.4))
+    ylim(-R*I, R*I)
 
     ax3 = subplot(313, sharex=ax1)
-    plot(t, E, '.-')
-    ylabel(r'$E_\mathrm{out}(t)$')
-
+    plot(t[:-1], R/4*cumtrapz(IP**2, t), '-.', label='$E_\mathrm{max}$')
+    plot(t, E, label='$E_\mathrm{out}$')
+    legend(loc=(1.02, 0.4))
+    ylabel(r'$E$')
+    yticks([])
+    ylim(-2e-8, 2e-7)
+    xticks([1/f/4, 1/f/2, 3/f/4, 1/f], ['$T/4$', '$T/2$','$3T/4$', '$T$'])
+    xlabel('$t$', x=0.5, ha='center')
+    
     """ Layout """
     setp(ax1.get_xticklabels(), visible=False)
+    setp(ax2.get_xticklabels(), visible=False)
     for ax in ax1, ax2, ax3:
+        ax.set_autoscale_on(False)
         ax.grid(True)
         #ax.set_xlim(ax.dataLim.intervalx)
         #ax.set_ylim(ax.dataLim.intervaly*1.2)
@@ -86,6 +98,6 @@ def plot_result(UC, IP, t):
     return ax3
 
 if __name__ == '__main__':
-    UC, IP, E, t = calc(R)
+    UC, IP, E, t = calc(R, deltaUC)
     plot_result(UC, IP, t)
     show()
