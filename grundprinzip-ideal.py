@@ -53,7 +53,7 @@ def calc(R, deltaUC):
     UC, E = integrate(IP, t, UC0, R, C, deltaUC)
     return UC, IP, E, t
 
-def plot_result(UC, IP, t):
+def plot_result(UC, IP, t, deltaUC):
     #f = figure(figsize=[7/2.54, 6/2.54])
     #ax1 = axes([0.2, 0.75, 0.7, 0.15])
     subplots_adjust(right=0.85)
@@ -65,8 +65,10 @@ def plot_result(UC, IP, t):
 
     #ax2 = axes([0.2, 0.1, 0.7, 0.6], sharex=ax1)
     ax2 = subplot(312, sharex=ax1)
-    plot(t, R/2.*IP, '-.', label='$U^*$')
-    plot(t, UC, label='$U$')
+    plot(t, R/2.*IP, '-.', label='$U^*$', color='blue')
+    plot(t, R/2.*IP + deltaUC, ':', color='0.6')
+    plot(t, R/2.*IP - deltaUC, ':', color='0.6')
+    plot(t, UC, label='$U$', color='green')
     ylabel(r'$U$')
     yticks([])
     legend(loc=(1.02, 0.4))
@@ -99,5 +101,5 @@ def plot_result(UC, IP, t):
 
 if __name__ == '__main__':
     UC, IP, E, t = calc(R, deltaUC)
-    plot_result(UC, IP, t)
+    plot_result(UC, IP, t, deltaUC)
     show()
