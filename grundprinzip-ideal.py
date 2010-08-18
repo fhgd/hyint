@@ -65,7 +65,7 @@ def plot_result(UC, IP, t, deltaUC):
 
     #ax2 = axes([0.2, 0.1, 0.7, 0.6], sharex=ax1)
     ax2 = subplot(312, sharex=ax1)
-    plot(t, R/2.*IP, '-.', label='$U^*$', color='blue')
+    plot(t, R/2.*IP, '-.', label='$U_\mathrm{soll}$', color='blue')
     plot(t, R/2.*IP + deltaUC, ':', color='0.6')
     plot(t, R/2.*IP - deltaUC, ':', color='0.6')
     plot(t, UC, label='$U$', color='green')
