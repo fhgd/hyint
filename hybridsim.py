@@ -62,26 +62,34 @@ if __name__ == '__main__':
     deltaUC = 0.02
 
     import math
+    from vector import vector as array
 
     def IP(t):
         return math.sin(t)
 
-    def f(t, UC):
+    def f(t, x):
+        UC, _ = x
         IC = IP(t) - UC/R
-        return IC/C
+        return array([IC/C, 0.0])
 
-    def HARVEST(t, UC, E):
+    def HARVEST(t, x, E):
+        UC, _ = x
         UC_ref = R/2. * IP(t)
         E_new = E + C/2*(UC**2 - UC_ref**2)
-        return UC_ref, E_new
+        return array([UC_ref, 0]), E_new
 
-    def ev_too_low(t, UC):
+    def ev_too_low(t, x):
+        UC, _ = x
         UC_ref = R/2. * IP(t)
         return UC - (UC_ref - deltaUC)
 
-    def ev_too_high(t, UC):
+    def ev_too_high(t, x):
+        UC, _ = x
         UC_ref = R/2. * IP(t)
         return (UC_ref + deltaUC) - UC
 
     graph = {HARVEST : {ev_too_low : HARVEST, ev_too_high : HARVEST}}
-    t, x, y = odeint(f, 0.0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
+    x0 = array([0, 0])
+    t, x, y = odeint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
+
+    UC = zip(*x)[0]
