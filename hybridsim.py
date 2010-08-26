@@ -57,39 +57,46 @@ def odeint(f, x0, t0, t1, dt, graph, z0, eps, y0):
 
 if __name__ == '__main__':
 
-    R = 0.5
-    C = 1.0
-    deltaUC = 0.02
+    R  = 0.5
+    C  = 1.0
+    CK = 1.0
+    LM = 1.0
+    RD = 2.0
+    deltaUC = 0.01
 
     import math
-    from vector import vector as array
+    from vector import vector
 
-    def IP(t):
-        return math.sin(t)
+    def UF(t):
+        return math.sin(t) # + 0.8*math.sin(2*t)
+
+    def UC_ref(t, x):
+        UC, IM, UK = x
+        return 0.5 * R/(R + RD) * UF(t)
 
     def f(t, x):
-        UC, _ = x
-        IC = IP(t) - UC/R
-        return array([IC/C, 0.0])
+        UC, IM, UK = x
+        dUC = (IM - UC/R) / C
+        dIM = (UF(t) - RD*IM - UK - UC) / LM
+        dUK = IM / CK
+        return vector([dUC, dIM, dUK])
 
     def HARVEST(t, x, E):
-        UC, _ = x
-        UC_ref = R/2. * IP(t)
-        E_new = E + C/2*(UC**2 - UC_ref**2)
-        return array([UC_ref, 0]), E_new
+        UC, IM, UK = x
+        E_new = E + C/2*(UC**2 - UC_ref(t, x)**2)
+        return vector([UC_ref(t, x), IM, UK]), E_new
 
     def ev_too_low(t, x):
-        UC, _ = x
-        UC_ref = R/2. * IP(t)
-        return UC - (UC_ref - deltaUC)
+        UC, IM, UK = x
+        return UC - (UC_ref(t, x) - deltaUC)
 
     def ev_too_high(t, x):
-        UC, _ = x
-        UC_ref = R/2. * IP(t)
-        return (UC_ref + deltaUC) - UC
+        UC, IM, UK = x
+        return (UC_ref(t, x) + deltaUC) - UC
 
     graph = {HARVEST : {ev_too_low : HARVEST, ev_too_high : HARVEST}}
-    x0 = array([0, 0])
+    x0 = vector([0, 0, 0])
     t, x, y = odeint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
 
-    UC = zip(*x)[0]
+    UC, IM, UK = [vector(_) for _ in zip(*x)]
+    ULC = vector(map(UF, t)) - RD*IM - UC
