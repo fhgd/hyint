@@ -2,20 +2,20 @@
 # -*- coding: utf-8 -*-
 
 def fsolve(g, x0, x1, eps):
-    """Nullstellensuche mit dem Sekantenverfahren."""
+    """Zero finding with the secant methode"""
 
     while abs(g(x1)) > eps:
         x0, x1 = x1, x1 - g(x1) * (x1 - x0) / (g(x1) - g(x0))
     return x1
 
 def odeint(f, x0, t0, t1, dt, graph, z0, eps, y0):
-    """Integration eines hybriden Systems (erster Ordnung)"""
+    """Integration of a hybrid system (with a first order ode system)"""
 
     # start values
-    t = [t0]
-    x = [x0]
-    y = [y0]
-    z = z0
+    t = [t0]            # time
+    x = [x0]            # time continuous states
+    y = [y0]            # time discrete states
+    z = z0              # state from the finite state machine (FSM)
 
     while t[-1] < t1:
 
