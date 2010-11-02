@@ -8,7 +8,7 @@ def fsolve(g, x0, x1, eps):
         x0, x1 = x1, x1 - g(x1) * (x1 - x0) / (g(x1) - g(x0))
     return x1
 
-def odeint(f, x0, t0, t1, dt, graph, z0, eps, y0):
+def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
     """Integration of a hybrid system (with a first order ode system)"""
 
     # start values
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     graph = {HARVEST : {ev_too_low : HARVEST, ev_too_high : HARVEST}}
     x0 = vector([0, 0, 0])
-    t, x, y = odeint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
+    t, x, y = hyint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
 
     UC, IM, UK = [vector(_) for _ in zip(*x)]
     ULC = vector(map(UF, t)) - RD*IM - UC
