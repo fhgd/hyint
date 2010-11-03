@@ -48,19 +48,20 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
                 break
 
         # find the first event
-        dt_min = dt
-        x_local = lambda t_: x[-2] + f(t[-2] + t_, x[-2]) * t_
+        k_min = 1.0
+        event = None
         for ev in events:
-            ev__x_local = lambda t_: ev(t[-2] + t_, x_local(t_))
-            dt0, dt1 = fsolve(ev__x_local, 0, dt, eps)
-            # Use dt1 which terminates the actual process
-            if dt1 <= dt_min:
-                dt_min = dt1
+            ev_local = lambda k: ev(t[-2] + k*dt, x[-2] + (x[-1] - x[-2])*k)
+            k0, k1 = fsolve(ev_local, 0.0, 1.0, eps)
+            # Use k1 which terminates the actual process
+            if k1 <= k_min:
+                k_min = k1
                 event = ev
+        assert event, 'No zero was found in [0, 1]'
 
         # correct the last integration step, which was too far
-        x[-1] = x_local(dt_min)
-        t[-1] = t[-2] + dt_min
+        x[-1] = x[-2] + (x[-1] - x[-2])*k_min
+        t[-1] = t[-2] + k_min*dt
 
         # transition and action of the FSM
         z = graph[z][event]
