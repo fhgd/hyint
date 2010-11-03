@@ -2,11 +2,26 @@
 # -*- coding: utf-8 -*-
 
 def fsolve(g, x0, x1, eps):
-    """Zero finding with the secant methode"""
+    """Zero finding with the bisect methode.
 
-    while abs(g(x1)) > eps:
-        x0, x1 = x1, x1 - g(x1) * (x1 - x0) / (g(x1) - g(x0))
-    return x1
+    Where x0 < x1 and g(x0) * g(x1) <= 0. The algorithm is from
+
+    Hans Petter Langtangen: A Primer on Scientific Programming with Python.
+    Page 156. http://books.google.com/books?id=cVof07z_rA4C
+    """
+
+    assert x0 < x1, 'x0 >= x1'
+    g0 = g(x0)
+    assert g0*g(x1) <= 0, 'g does not change sign in [x0, x1]'
+    while x1 - x0 > eps:
+        xm = (x0 + x1) / 2.0
+        gm = g(xm)
+        if g0*gm <= 0:
+            x1 = xm     # zero is in left half
+        else:
+            x0 = xm     # zero is in right half
+            g0 = gm
+    return x0, x1
 
 def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
     """Integration of a hybrid system (with a first order ode system)"""
@@ -37,9 +52,10 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
         x_local = lambda t_: x[-2] + f(t[-2] + t_, x[-2]) * t_
         for ev in events:
             ev__x_local = lambda t_: ev(t[-2] + t_, x_local(t_))
-            dt_ = fsolve(ev__x_local, 0, dt, eps)
-            if dt_ <= dt_min:
-                dt_min = dt_
+            dt0, dt1 = fsolve(ev__x_local, 0, dt, eps)
+            # Use dt1 which terminates the actual process
+            if dt1 <= dt_min:
+                dt_min = dt1
                 event = ev
 
         # correct the last integration step, which was too far
