@@ -32,47 +32,38 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
     y = [y0]            # time discrete states
     z = z0              # state from the finite state machine (FSM)
 
-    while 1:
-        # integrate until time is over or at least one event is detected
-        while 1:
-            # take a look at time
-            if t[-1] > t1:
-                # time is over
-                return t, x, y
-            # integrate with an euler step
-            x.append(x[-1] + f(t[-1], x[-1]) * dt)
-            t.append(t[-1] + dt)
-            # constant extention of the time discrete vaules
-            y.append(y[-1])
-            # test all event functions
-            events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1]) < 0]
-            if events:
-                # at least one event is detected
-                break
-
-        # find the first event
-        k_min = 1.0
-        event = None
-        for ev in events:
-            ev_local = lambda k: ev(t[-2] + k*dt, x[-2] + (x[-1] - x[-2])*k)
-            k0, k1 = fsolve(ev_local, 0.0, 1.0, eps)
-            # Use k1 which terminates the actual process
-            if k1 <= k_min:
-                k_min = k1
-                event = ev
-        assert event, 'No zero was found in [0, 1]'
-
-        # correct the last integration step, which was too far
-        x[-1] = x[-2] + (x[-1] - x[-2])*k_min
-        t[-1] = t[-2] + k_min*dt
-
-        # transition and action of the FSM
-        z = graph[z][event]
-        x_new, y_new = z(t[-1], x[-1], y[-1])
-        x.append(x_new)
-        y.append(y_new)
-        t.append(t[-1])
-
+    # integrate until time is over
+    while t[-1] <= t1:
+        # test all event functions
+        events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1]) < 0]
+        if events:
+            print t[-1], events
+            # at least one event is detected, so find the first event
+            k_min = 1.0
+            event = None
+            for ev in events:
+                ev_local = lambda k: ev(t[-2] + k*dt, x[-2] + (x[-1] - x[-2])*k)
+                k0, k1 = fsolve(ev_local, 0.0, 1.0, eps)
+                # Use k1 which terminates the actual process
+                if k1 <= k_min:
+                    k_min = k1
+                    event = ev
+            assert event, 'No zero was found in [0, 1]'
+            # correct the last integration step, which was too far
+            x[-1] = x[-2] + (x[-1] - x[-2])*k_min
+            t[-1] = t[-2] + k_min*dt
+            # transition and action of the FSM
+            z = graph[z][event]
+            x_new, y_new = z(t[-1], x[-1], y[-1])
+            x.append(x_new)
+            y.append(y_new)
+            t.append(t[-1])
+        # integrate with an euler step
+        x.append(x[-1] + f(t[-1], x[-1]) * dt)
+        t.append(t[-1] + dt)
+        # constant extension of the time discrete vaules
+        y.append(y[-1])
+    return t, x, y
 
 if __name__ == '__main__':
 
