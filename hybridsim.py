@@ -52,12 +52,22 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
             # correct the last integration step, which was too far
             x[-1] = x[-2] + (x[-1] - x[-2])*k_min
             t[-1] = t[-2] + k_min*dt
-            # transition and action of the FSM
-            z = graph[z][event]
-            x_new, y_new = z(t[-1], x[-1], y[-1])
-            x.append(x_new)
-            y.append(y_new)
-            t.append(t[-1])
+            # transition and action of the FSM until all events are off
+            while 1:
+                z = graph[z][event]
+                print z.__name__
+                x_new, y_new = z(t[-1], x[-1], y[-1])
+                x.append(x_new)
+                y.append(y_new)
+                t.append(t[-1])
+                # test all event functions
+                events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1]) < 0]
+                if events:
+                    event = events[0]
+                    assert len(events) == 1, \
+                        'More the one active event after a FSM transaction.'
+                else:
+                    break
         # integrate with an euler step
         x.append(x[-1] + f(t[-1], x[-1]) * dt)
         t.append(t[-1] + dt)
