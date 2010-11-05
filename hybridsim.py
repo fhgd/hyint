@@ -32,10 +32,13 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
     y = [y0]            # time discrete states
     z = z0              # state from the finite state machine (FSM)
 
-    while t[-1] < t1:
-
-        # integrate until at least one event is detected
+    while 1:
+        # integrate until time is over or at least one event is detected
         while 1:
+            # take a look at time
+            if t[-1] > t1:
+                # time is over
+                return t, x, y
             # integrate with an euler step
             x.append(x[-1] + f(t[-1], x[-1]) * dt)
             t.append(t[-1] + dt)
@@ -69,7 +72,6 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
         x.append(x_new)
         y.append(y_new)
         t.append(t[-1])
-    return t, x, y
 
 
 if __name__ == '__main__':
