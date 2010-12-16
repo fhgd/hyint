@@ -77,46 +77,57 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
 
 if __name__ == '__main__':
 
-    R  = 0.5
-    C  = 1.0
-    CK = 1.0
-    LM = 1.0
-    RD = 2.0
-    deltaUC = 0.01
+    Upeak = 2.5
+    freq = 750.
+    t1 = 5./freq
 
-    import math
+    R  = 5.
+    L  = 800e-6
+    deltaU = 0.1
+
+    from numpy import pi, sin, cos
     from vector import vector
 
-    def UF(t):
-        return math.sin(t) # + 0.8*math.sin(2*t)
+    def Uq(t):
+        return Upeak*sin(2*pi*freq * t)
 
-    def UC_ref(t, x):
-        UC, IM, UK = x
-        return 0.5 * R/(R + RD) * UF(t)
+    def dUq(t):
+        return 2*pi*freq * Upeak*cos(2*pi*freq * t)
 
-    def f(t, x):
-        UC, IM, UK = x
-        dUC = (IM - UC/R) / C
-        dIM = (UF(t) - RD*IM - UK - UC) / LM
-        dUK = IM / CK
-        return vector([dUC, dIM, dUK])
+    def Uref(t):
+        return 0.5 * (Uq(t) - L/R*dUq(t))
 
-    def HARVEST(t, x, E):
-        UC, IM, UK = x
-        E_new = E + C/2*(UC**2 - UC_ref(t, x)**2)
-        return vector([UC_ref(t, x), IM, UK]), E_new
+    def f(x, t):
+        IL, E = x
+        dIL = (Uq(t) - R*IL - Uref(t)) / L
+        dE  = Uref(t) * IL
+        return vector([dIL, dE])
 
-    def ev_too_low(t, x):
-        UC, IM, UK = x
-        return UC - (UC_ref(t, x) - deltaUC)
+    from scipy.integrate import odeint
+    from numpy import linspace
 
-    def ev_too_high(t, x):
-        UC, IM, UK = x
-        return (UC_ref(t, x) + deltaUC) - UC
+    t = linspace(0, t1, 500)
+    z = odeint(f, [0, 0], t)
+    IL, E = z.T
+    Pmean = E[-1] / t1
+    print 'Mittlere Leistung  P =', Pmean
 
-    graph = {HARVEST : {ev_too_low : HARVEST, ev_too_high : HARVEST}}
-    x0 = vector([0, 0, 0])
-    t, x, y = hyint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
+    #~ def HARVEST(t, x, E):
+        #~ UC, IM, UK = x
+        #~ E_new = E + C/2*(UC**2 - UC_ref(t, x)**2)
+        #~ return vector([UC_ref(t, x), IM, UK]), E_new
 
-    UC, IM, UK = [vector(_) for _ in zip(*x)]
-    ULC = vector(map(UF, t)) - RD*IM - UC
+    #~ def ev_too_low(t, x):
+        #~ UC, IM, UK = x
+        #~ return UC - (UC_ref(t, x) - deltaUC)
+
+    #~ def ev_too_high(t, x):
+        #~ UC, IM, UK = x
+        #~ return (UC_ref(t, x) + deltaUC) - UC
+
+    #~ graph = {HARVEST : {ev_too_low : HARVEST, ev_too_high : HARVEST}}
+    #~ x0 = vector([0, 0, 0])
+    #~ t, x, y = hyint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
+
+    #~ UC, IM, UK = [vector(_) for _ in zip(*x)]
+    #~ ULC = vector(map(UF, t)) - RD*IM - UC
