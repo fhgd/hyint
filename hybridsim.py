@@ -112,19 +112,19 @@ if __name__ == '__main__':
         return Uq(t)/(2*R) - Cp*dUref(t)
 
     def f(x, t):
-        I, UC, U, E = x
-        dI  = (Uq(t) - R*I - UC - U) / L
-        dUC = I / C
-        dU  = (I - Iref(t)) / Cp
+        Iq, UC, U, E = x
+        dIq = (Uq(t) - R*Iq - UC - U) / L
+        dUC = Iq / C
+        dU  = (Iq - Iref(t)) / Cp
         dE  = U * Iref(t)
-        return vector([dI, dUC, dU, dE])
+        return vector([dIq, dUC, dU, dE])
 
     from scipy.integrate import odeint
     from numpy import linspace
 
     t = linspace(0, t1, 500)
     z = odeint(f, [0, 0, Uref(0), 0], t)
-    I, UC, U, E = z.T
+    Iq, UC, U, E = z.T
     Pmean = E[-1] / t1
     print 'Mittlere Leistung  P =', Pmean
 
