@@ -92,6 +92,9 @@ if __name__ == '__main__':
     def Uq(t):
         return Upeak*sin(2*pi*freq * t)
 
+    def iUq(t):
+        return Upeak/(2*pi*freq) * (1 - cos(2*pi*freq * t))
+
     def dUq(t):
         return 2*pi*freq * Upeak*cos(2*pi*freq * t)
 
@@ -99,27 +102,21 @@ if __name__ == '__main__':
         return -(2*pi*freq)**2 * Upeak*sin(2*pi*freq * t)
 
     def Uref(t):
-        return 0.5 * (Uq(t) - L/R*dUq(t))
-
-    def dUref(t):
-        return 0.5 * (dUq(t) - L/R*d2Uq(t))
-
-    def Iref(t):
-        return Uq(t)/(2*R) - C*dUref(t)
+        return 0.5 * (Uq(t) - L/R*dUq(t) - 1/(R*C)*iUq(t))
 
     def f(x, t):
-        I, U, E = x
-        dI = (Uq(t) - R*I - U) / L
-        dU = (I - Iref(t)) / C
-        dE  = U * Iref(t)
-        return vector([dI, dU, dE])
+        I, UC, E = x
+        dI  = (Uq(t) - R*I - UC - Uref(t)) / L
+        dUC = I / C
+        dE  = Uref(t) * I
+        return vector([dI, dUC, dE])
 
     from scipy.integrate import odeint
     from numpy import linspace
 
     t = linspace(0, t1, 500)
-    z = odeint(f, [0, Uref(0), 0], t)
-    I, U, E = z.T
+    z = odeint(f, [0, 0, 0], t)
+    I, UC, E = z.T
     Pmean = E[-1] / t1
     print 'Mittlere Leistung  P =', Pmean
 
