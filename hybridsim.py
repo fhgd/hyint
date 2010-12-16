@@ -84,6 +84,7 @@ if __name__ == '__main__':
     R  = 5.
     L  = 800e-6
     C  = 10e-6
+    Cp  = 100e-6
     deltaU = 0.1
 
     from numpy import pi, sin, cos
@@ -104,19 +105,26 @@ if __name__ == '__main__':
     def Uref(t):
         return 0.5 * (Uq(t) - L/R*dUq(t) - 1/(R*C)*iUq(t))
 
+    def dUref(t):
+        return 0.5 * (dUq(t) - L/R*d2Uq(t) - 1/(R*C)*Uq(t))
+
+    def Iref(t):
+        return Uq(t)/(2*R) - Cp*dUref(t)
+
     def f(x, t):
-        I, UC, E = x
-        dI  = (Uq(t) - R*I - UC - Uref(t)) / L
+        I, UC, U, E = x
+        dI  = (Uq(t) - R*I - UC - U) / L
         dUC = I / C
-        dE  = Uref(t) * I
-        return vector([dI, dUC, dE])
+        dU  = (I - Iref(t)) / Cp
+        dE  = U * Iref(t)
+        return vector([dI, dUC, dU, dE])
 
     from scipy.integrate import odeint
     from numpy import linspace
 
     t = linspace(0, t1, 500)
-    z = odeint(f, [0, 0, 0], t)
-    I, UC, E = z.T
+    z = odeint(f, [0, 0, Uref(0), 0], t)
+    I, UC, U, E = z.T
     Pmean = E[-1] / t1
     print 'Mittlere Leistung  P =', Pmean
 
