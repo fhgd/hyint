@@ -77,15 +77,22 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
 
 if __name__ == '__main__':
 
-    Upeak = 2.5
-    freq = 750.
-    t1 = 5./freq
+    a  = 5              # m/s^2
+    m  = 0.001074       # kg
+    D  = 0.026489
+    k  = 2389.6
+    ga = 0.001016
 
-    R  = 5.
-    L  = 800e-6
-    C  = 10e-6
-    Cp  = 100e-6
-    deltaU = 0.1
+    Cp  = 12e-9
+
+    freq = 173.7
+    t1 = 2/freq
+
+    F  = m * a
+    Upeak = F / ga
+    R  = D / ga**2
+    L  = m / ga**2
+    C  = ga**2 / k
 
     from numpy import pi, sin, cos
     from vector import vector
