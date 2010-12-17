@@ -138,6 +138,20 @@ if __name__ == '__main__':
     print 'Maximale Leistung  Pmax  =', Pmax
     print 'Verhaeltnis Pmean / Pmax =', Pmean / Pmax
 
+    def p(*args):
+        return 1.0 / sum(1.0/z for z in args)
+
+    j = 1j
+    omega = 2*pi*freq
+    s = j*omega
+
+    Z = p(1/(s*Cp), R + s*L + 1/(s*C))
+    U0 = Upeak * 1/(s*Cp) / (R + s*L + 1/(s*C) + 1/(s*Cp))
+    P_max = abs(U0)**2 / (8*Z.real)
+    print 'Maximale Leistung (komplexe Rechnung): ', P_max
+
+    U_ =   Z.conjugate() / (Z + Z.conjugate()) * U0
+
     #~ def HARVEST(t, x, E):
         #~ UC, IM, UK = x
         #~ E_new = E + C/2*(UC**2 - UC_ref(t, x)**2)
