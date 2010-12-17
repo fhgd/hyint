@@ -133,7 +133,10 @@ if __name__ == '__main__':
     z = odeint(f, [0, 0, Uref(0), 0], t)
     Iq, UC, U, E = z.T
     Pmean = E[-1] / t1
-    print 'Mittlere Leistung  P =', Pmean
+    print 'Mittlere Leistung  Pmean =', Pmean
+    Pmax = Upeak**2 / (8*R)
+    print 'Maximale Leistung  Pmax  =', Pmax
+    print 'Verhaeltnis Pmean / Pmax =', Pmean / Pmax
 
     #~ def HARVEST(t, x, E):
         #~ UC, IM, UK = x
