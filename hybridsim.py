@@ -78,14 +78,14 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
 if __name__ == '__main__':
 
     a  = 5              # m/s^2
-    m  = 0.001074       # kg
-    D  = 0.026489
-    k  = 2389.6
-    ga = 0.001016
+    m  = 0.0018         # kg
+    D  = 0.0426
+    k  = 2076.5
+    ga = 0.00107
 
-    Cp  = 20.5e-9
+    Cp  = 23e-9
 
-    freq = 173.7
+    freq = 172.7
     t1 = 2/freq
 
     F  = m * a
@@ -129,10 +129,10 @@ if __name__ == '__main__':
     from scipy.integrate import odeint
     from numpy import linspace
 
-    t = linspace(0, t1, 500)
-    z = odeint(f, [0, 0, Uref(0), 0], t)
+    t = linspace(0, t1*10, 1000)
+    z = odeint(f, [0, -188.3, -4.5, 0], t)
     Iq, UC, U, E = z.T
-    Pmean = E[-1] / t1
+    Pmean = E[-1] / t[-1]
     print 'Mittlere Leistung  Pmean =', Pmean
     Pmax = Upeak**2 / (8*R)
     print 'Maximale Leistung  Pmax  =', Pmax
