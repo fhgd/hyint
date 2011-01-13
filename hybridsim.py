@@ -85,8 +85,10 @@ if __name__ == '__main__':
 
     Cp  = 23e-9
 
+    t0 = 0.0
     freq = 172.7
-    t1 = 2/freq
+    t1 = 10/freq
+    dt = 1.0 / freq / 30000
 
     F  = m * a
     Upeak = F / ga
@@ -94,45 +96,63 @@ if __name__ == '__main__':
     L  = m / ga**2
     C  = ga**2 / k
 
-    from numpy import pi, sin, cos
-    from vector import vector
+    from numpy import pi, sin, cos, sign
+    from vector import vector as array
 
     def Uq(t):
         return Upeak*sin(2*pi*freq * t)
 
-    def iUq(t):
-        return Upeak/(2*pi*freq) * (1 - cos(2*pi*freq * t))
-
-    def dUq(t):
-        return 2*pi*freq * Upeak*cos(2*pi*freq * t)
-
-    def d2Uq(t):
-        return -(2*pi*freq)**2 * Upeak*sin(2*pi*freq * t)
-
-    def Uref(t):
-        return 0.5 * (Uq(t) - L/R*dUq(t) - 1/(R*C)*iUq(t))
-
-    def dUref(t):
-        return 0.5 * (dUq(t) - L/R*d2Uq(t) - 1/(R*C)*Uq(t))
-
-    def Iref(t):
-        return Uq(t)/(2*R) - Cp*dUref(t)
-
-    def f(x, t):
-        Iq, UC, U, E = x
+    def f(t, x):
+        Iq, UC, U = x
         dIq = (Uq(t) - R*Iq - UC - U) / L
         dUC = Iq / C
-        dU  = (Iq - Iref(t)) / Cp
-        dE  = U * Iref(t)
-        return vector([dIq, dUC, dU, dE])
+        dU  = Iq / Cp
+        return array([dIq, dUC, dU])
 
-    from scipy.integrate import odeint
-    from numpy import linspace
+    def CHARGE(t, x, y):
+        Iq, UC, U = x
+        E, Umax = y
+        E_new = E + Cp/2 * U**2
+        return array([Iq, UC, 0.0]), array([E_new, U])
 
-    t = linspace(0, t1*10, 1000)
-    z = odeint(f, [0, -188.3, -4.5, 0], t)
-    Iq, UC, U, E = z.T
-    Pmean = E[-1] / t[-1]
+    def ev_harvest(t, x):
+        Iq, UC, U = x
+        iCp = Iq * sign(U)
+        return iCp
+
+    graph = {CHARGE : {ev_harvest : CHARGE}}
+    # Die Anfangswerte wurden iterativ so ermittelt, dass die Trajektorie
+    # moeglichst nah am stationaeren Grenzzyklus beginnt
+    x0 = array([0, -150, 0])
+    y0 = array([0, 0])
+    t, x, y = hyint(f, x0, t0, t1, dt, graph, CHARGE, 1e-15, y0)
+    Iq, UC, U = zip(*x)
+    E, Umax = zip(*y)
+
+    from pylab import subplot, plot, ylabel, gcf, setp, show
+
+    ax1 = subplot(411)
+    plot(t, Iq)
+    ylabel('Iq')
+
+    subplot(412, sharex=ax1)
+    plot(t, UC)
+    ylabel('UC')
+
+    subplot(413, sharex=ax1)
+    plot(t, U)
+    ylabel('U')
+
+    subplot(414, sharex=ax1)
+    plot(t, E)
+    ylabel('E')
+
+    for ax in gcf().axes:
+        ax.grid(True)
+        setp(ax.get_yaxis().label, rotation='horizontal')
+    show()
+
+    Pmean = Cp/2 * Umax[-1]**2 * 2*freq
     print 'Mittlere Leistung  Pmean =', Pmean
     Pmax = Upeak**2 / (8*R)
     print 'Maximale Leistung  Pmax  =', Pmax
@@ -151,23 +171,3 @@ if __name__ == '__main__':
     print 'Maximale Leistung (komplexe Rechnung): ', P_max
 
     U_ =   Z.conjugate() / (Z + Z.conjugate()) * U0
-
-    #~ def HARVEST(t, x, E):
-        #~ UC, IM, UK = x
-        #~ E_new = E + C/2*(UC**2 - UC_ref(t, x)**2)
-        #~ return vector([UC_ref(t, x), IM, UK]), E_new
-
-    #~ def ev_too_low(t, x):
-        #~ UC, IM, UK = x
-        #~ return UC - (UC_ref(t, x) - deltaUC)
-
-    #~ def ev_too_high(t, x):
-        #~ UC, IM, UK = x
-        #~ return (UC_ref(t, x) + deltaUC) - UC
-
-    #~ graph = {HARVEST : {ev_too_low : HARVEST, ev_too_high : HARVEST}}
-    #~ x0 = vector([0, 0, 0])
-    #~ t, x, y = hyint(f, x0, 0.0, 3*math.pi, 0.001, graph, HARVEST, 1e-15, 0.0)
-
-    #~ UC, IM, UK = [vector(_) for _ in zip(*x)]
-    #~ ULC = vector(map(UF, t)) - RD*IM - UC
