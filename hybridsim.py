@@ -68,9 +68,11 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
                         'More the one active event after a FSM transaction.'
                 else:
                     break
-        # integrate with an euler step
-        x.append(x[-1] + f(t[-1], x[-1]) * dt)
+        # integrate with heun
+        k1 = f(t[-1], x[-1])
         t.append(t[-1] + dt)
+        k2 = f(t[-1], x[-1] + k1*dt)
+        x.append(x[-1] + (k1 + k2)*dt/2.0)
         # constant extension of the time discrete vaules
         y.append(y[-1])
     return t, x, y
@@ -88,7 +90,7 @@ if __name__ == '__main__':
     t0 = 0.0
     freq = 172.7
     t1 = 10/freq
-    dt = 1.0 / freq / 30000
+    dt = 1.0 / freq / 5000
 
     F  = m * a
     Upeak = F / ga
