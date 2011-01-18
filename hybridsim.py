@@ -92,8 +92,8 @@ if __name__ == '__main__':
 
     t0 = 0.0
     freq = 172.7
-    t1 = 10/freq
-    dt = 1.0 / freq / 1000
+    t1 = 50/freq
+    dt = 1.0 / freq / 100
 
     F  = m * a
     Upeak = F / ga
@@ -126,9 +126,7 @@ if __name__ == '__main__':
         return iCp
 
     graph = {CHARGE : {ev_harvest : CHARGE}}
-    # Die Anfangswerte wurden iterativ so ermittelt, dass die Trajektorie
-    # moeglichst nah am stationaeren Grenzzyklus beginnt
-    x0 = array([0, -150, 0])
+    x0 = array([0, 0, 0])
     y0 = array([0, 0])
     t, x, y = hyint(f, x0, t0, t1, dt, graph, CHARGE, 1e-15, y0)
     Iq, UC, U = zip(*x)
