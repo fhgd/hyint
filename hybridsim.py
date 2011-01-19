@@ -118,7 +118,7 @@ if __name__ == '__main__':
         Iq, UC, U = x
         E, Umax = y
         E_new = E + Cp/2 * U**2
-        return array([Iq, UC, 0.0]), array([E_new, U])
+        return array([0.0, UC, 0.0]), array([E_new, U])
 
     def ev_harvest(t, x):
         Iq, UC, U = x
