@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""A pure python module for integration of a hybrid system."""
 
 def fsolve(g, x0, x1, eps):
-    """Zero finding with the bisect methode.
+    """Zero finding of function g with the bisect methode.
 
     Where x0 < x1 and g(x0) * g(x1) <= 0. The algorithm is from
 
     Hans Petter Langtangen: A Primer on Scientific Programming with Python.
     Page 156. http://books.google.com/books?id=cVof07z_rA4C
     """
-
     assert x0 < x1, 'x0 >= x1'
     g0 = g(x0)
     assert g0*g(x1) <= 0, 'g does not change sign in [x0, x1]'
@@ -24,8 +22,55 @@ def fsolve(g, x0, x1, eps):
     return x0, x1
 
 def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
-    """Integration of a hybrid system (with a first order ode system)"""
+    """Integration of a hybrid system within the time interval [t0, t1].
 
+    The hybrid system consists of a first order ordinary differential equation
+    (ODE) system
+
+        x' = f(t, x, y)    with x(t0) = x0
+
+    and a finite-state machine (FSM)
+
+        z_new = graph(z, event)    with z(t0) = z0.
+
+    Where t is the (global) time, x is the continuous state (vector), y is
+    the time discrete state (vector) and z is the FSM state. The state
+    transition function of the FSM is given as a dictionary like following:
+
+        graph = {z_1 : {event_a : z_1, event_b : z_2},
+                 z_2 : {event_b : z_1, event_b : z_2},
+                }
+
+    The finite states z_i are functions which are called after a state
+    transition and defines the new init value for the ODE system and the time
+    discrete state transition of y:
+
+        x_new, y_new = z(t, x, y)    with y(t0) = y0.
+
+    The events are also functions which must be negative to activate the
+    event:
+
+        ev(t, x) < 0.
+
+    It is important to note that only one event of the current state can be
+    active. Otherwise the next FSM state would be ambiguous.
+
+    The integration of the ODE system is done with the Runge-Kutta methode of
+    fourth order and a stepsize dt until the next event occurs. The exact
+    event time t_ev for
+
+        event(t_ev, x(t_ev), y) = 0
+
+    is determined within the tolerance eps. It is also important to note that
+    events are only detected if the event function change the sign within one
+    time step:
+
+        event(t, x, y) * event(t + dt, x, y) <= 0.
+
+    But the correct event detection is not the only reason for a small step
+    size. The used Runge-Kutte methode for integration is not a-stabil. So the
+    integration error becomes unbounded if the step size is too large.
+    """
     # start values
     t = [t0]            # time
     x = [x0]            # time continuous states
@@ -65,10 +110,10 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
                 if events:
                     event = events[0]
                     assert len(events) == 1, \
-                        'More the one active event after a FSM transaction.'
+                        'More then one active event after a FSM transaction.'
                 else:
                     break
-        # integrate with Runge-Kutta
+        # integrate with Runge-Kutta fourth order
         t_, x_, y_ = t[-1], x[-1], y[-1]
         k1 = f(t_, x_, y_)
         k2 = f(t_ + dt/2.0, x_ + k1*dt/2.0, y_)
