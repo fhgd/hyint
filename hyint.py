@@ -21,7 +21,7 @@ def fsolve(g, x0, x1, eps):
             g0 = gm
     return x0, x1
 
-def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
+def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=True):
     """Integration of a hybrid system within the time interval [t0, t1].
 
     The hybrid system consists of a first order ordinary differential equation
@@ -82,8 +82,10 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
         # test all event functions
         events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1]) < 0]
         if events:
-            print t[-1], events
             # at least one event is detected, so find the first event
+            if debug:
+                ev_names = ', '.join([ev.__name__ for ev in events])
+                print 't = %.15f : detected %s' % (t[-1], ev_names)
             k_min = 1.0
             event = None
             for ev in events:
@@ -97,10 +99,13 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0):
             # correct the last integration step, which was too far
             x[-1] = x[-2] + (x[-1] - x[-2])*k_min
             t[-1] = t[-2] + k_min*dt
+            if debug:
+                print 't = %.15f : located  %s' % (t[-1], event.__name__)
             # transition and action of the FSM until all events are off
             while 1:
                 z = graph[z][event]
-                print z.__name__
+                if debug:
+                    print z.__name__
                 x_new, y_new = z(t[-1], x[-1], y[-1])
                 x.append(x_new)
                 y.append(y_new)
