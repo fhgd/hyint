@@ -1,93 +1,120 @@
+#!/usr/bin/env python
+#
+# Piezo generator model:
+#
+#       ,-->-- R -- L -- C ----+-->--o
+#      +|  Iq           +UC-   |  I  +
+#      Uq                      Cp    U
+#      -|                      |     -
+#       '----------------------+-----o
+#
+# Interface principle: Synchronous electrical charge extraction (SECE)
+#
+#       (1) Leave the generator in open circuit.
+#       (2) When the generator voltage U has a extremum, then immediately
+#           discharge the piezo capacitor Cp. (Idealy, this discharge doesn't
+#           take any time.)
+
 from hyint import hyint
 from vector import vector as array
 from numpy import pi, sin, cos, sign
 
+# Piezo model parameters
+#       Mechanical
 a  = 5              # m/s^2
 m  = 0.0018         # kg
 D  = 0.0426
 k  = 2076.5
 ga = 0.00107
-
-Cp  = 23e-9
-
-t0 = 0.0
-freq = 172.7
-t1 = 50/freq
-dt = 1.0 / freq / 100
-
+#       Electrical
+Cp  = 23e-9         # F
+#       Calculate the circuit parameters
 F  = m * a
-Upeak = F / ga
+UqPeak = F / ga
 R  = D / ga**2
 L  = m / ga**2
 C  = ga**2 / k
 
+# Simulation parameters
+t0 = 0.0
+freq = 172.7
+t1 = 50/freq                    # Simulate until the system gets statinary
+dt = 1.0 / freq / 100
+eps = 1e-15
+
 def Uq(t):
-    return Upeak*sin(2*pi*freq * t)
+    """Source voltage"""
+    return UqPeak*sin(2*pi*freq * t)
 
 def f(t, x, y):
-    Iq, UC, U = x
+    """Vector field from the ODE system"""
+    Iq, UC, U = x                               # time continous state vector
     dIq = (Uq(t) - R*Iq - UC - U) / L
     dUC = Iq / C
     dU  = Iq / Cp
     return array([dIq, dUC, dU])
 
-def CHARGE(t, x, y):
+def ev_harvest(t, x):
+    """The harvesting event occurs when the voltage U has an extremum. This is
+    equivalent with I_Cp = Iq = 0. To distinguish the positive and negative
+    zero crossing, the event function becomes Iq * sign(U) <= 0."""
     Iq, UC, U = x
-    E, Umax = y
+    return Iq * sign(U)
+
+def CHARGE(t, x, y):
+    """The SECE principle could modeled with only one FSM state CHARGE. After
+    every extremum of the output voltage U is reseted to zero. Also the 
+    current Iq is set to zero avoiding numerical problems. Additional the
+    time discrete state vector saves the energy E transfered through the 
+    output and every extremum of the voltage U."""
+    Iq, UC, U = x
+    E, Umax = y                                 # time discrete state vector
     E_new = E + Cp/2 * U**2
     return array([0.0, UC, 0.0]), array([E_new, U])
 
-def ev_harvest(t, x):
-    Iq, UC, U = x
-    iCp = Iq * sign(U)
-    return iCp
+SECEgraph = {CHARGE : {ev_harvest : CHARGE}}    # FSM graph
+z0 = CHARGE                                     # Init FSM state
+x0 = array([0, 0, 0])                           # Init values for Iq, UC, U
+y0 = array([0, 0])                              # Init values for E, Umax
 
-graph = {CHARGE : {ev_harvest : CHARGE}}
-x0 = array([0, 0, 0])
-y0 = array([0, 0])
-t, x, y = hyint(f, x0, t0, t1, dt, graph, CHARGE, 1e-15, y0)
+# Run the simulation
+t, x, y = hyint(f, x0, t0, t1, dt, SECEgraph, z0, eps, y0)
+# Transpose the results
 Iq, UC, U = zip(*x)
 E, Umax = zip(*y)
 
-from pylab import subplot, plot, ylabel, gcf, setp, show
-
-ax1 = subplot(411)
-plot(t, Iq)
-ylabel('Iq')
-
-subplot(412, sharex=ax1)
-plot(t, UC)
-ylabel('UC')
-
-subplot(413, sharex=ax1)
-plot(t, U)
-ylabel('U')
-
-subplot(414, sharex=ax1)
-plot(t, E)
-ylabel('E')
-
-for ax in gcf().axes:
-    ax.grid(True)
-    setp(ax.get_yaxis().label, rotation='horizontal')
-show()
-
+# If the system gets stationary, the last Umax is related to the averaged power
 Pmean = Cp/2 * Umax[-1]**2 * 2*freq
-print 'Mittlere Leistung  Pmean =', Pmean
-Pmax = Upeak**2 / (8*R)
-print 'Maximale Leistung  Pmax  =', Pmax
-print 'Verhaeltnis Pmean / Pmax =', Pmean / Pmax
+print 'Pmean =', Pmean
+# The maximum output power in the case of impedance matching
+Pmax = UqPeak**2 / (8*R)
+print 'Pmax  =', Pmax
+print 'Pmean / Pmax =', Pmean / Pmax
 
-def p(*args):
-    return 1.0 / sum(1.0/z for z in args)
 
-j = 1j
-omega = 2*pi*freq
-s = j*omega
+def rplot(Iq, UC, U, E):
+    """Plot the results."""
+    from pylab import subplot, plot, ylabel, gcf, setp, show
 
-Z = p(1/(s*Cp), R + s*L + 1/(s*C))
-U0 = Upeak * 1/(s*Cp) / (R + s*L + 1/(s*C) + 1/(s*Cp))
-P_max = abs(U0)**2 / (8*Z.real)
-print 'Maximale Leistung (komplexe Rechnung): ', P_max
+    ax1 = subplot(411)
+    plot(t, Iq)
+    ylabel('Iq')
 
-U_ =   Z.conjugate() / (Z + Z.conjugate()) * U0
+    subplot(412, sharex=ax1)
+    plot(t, UC)
+    ylabel('UC')
+
+    subplot(413, sharex=ax1)
+    plot(t, U)
+    ylabel('U')
+
+    subplot(414, sharex=ax1)
+    plot(t, E)
+    ylabel('E')
+
+    for ax in gcf().axes:
+        ax.grid(True)
+        setp(ax.get_yaxis().label, rotation='horizontal')
+    show()
+
+rplot(Iq, UC, U, E)
