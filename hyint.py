@@ -21,7 +21,7 @@ def fsolve(g, x0, x1, eps):
             g0 = gm
     return x0, x1
 
-def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=True):
+def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
     """Integration of a hybrid system within the time interval [t0, t1].
 
     The hybrid system consists of a first order ordinary differential equation
