@@ -14,7 +14,7 @@ def fsolve(g, x0, x1, eps):
     while x1 - x0 > eps:
         xm = (x0 + x1) / 2.0
         gm = g(xm)
-        if g0*gm <= 0:
+        if g0*gm < 0:
             x1 = xm     # zero is in left half
         else:
             x0 = xm     # zero is in right half
