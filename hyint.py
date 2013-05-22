@@ -50,7 +50,7 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
     The events are also functions which must be negative to activate the
     event:
 
-        ev(t, x) < 0.
+        ev(t, x, y) < 0.
 
     It is important to note that only one event of the current state can be
     active. Otherwise the next FSM state would be ambiguous.
@@ -80,7 +80,7 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
     # integrate until time is over
     while t[-1] <= t1:
         # test all event functions
-        events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1]) < 0]
+        events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1], y[-1]) < 0]
         if events:
             # at least one event is detected, so find the first event
             if debug:
@@ -89,7 +89,7 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
             k_min = 1.0
             event = None
             for ev in events:
-                ev_local = lambda k: ev(t[-2] + k*dt, x[-2] + (x[-1] - x[-2])*k)
+                ev_local = lambda k: ev(t[-2] + k*dt, x[-2] + (x[-1] - x[-2])*k, y[-1])
                 k0, k1 = fsolve(ev_local, 0.0, 1.0, eps)
                 # Use k1 which terminates the actual process
                 if k1 <= k_min:
@@ -111,7 +111,7 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
                 y.append(y_new)
                 t.append(t[-1])
                 # test all event functions
-                events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1]) < 0]
+                events = [ev for ev in graph[z].iterkeys() if ev(t[-1], x[-1], y[-1]) < 0]
                 if events:
                     event = events[0]
                     assert len(events) == 1, \
