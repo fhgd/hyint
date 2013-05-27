@@ -1,5 +1,12 @@
 """A pure python module for integration of a hybrid system."""
 
+"""
+ToDo:
+
+* Add warning, when the ode has only one time step between the FSM transitions
+
+"""
+
 def fsolve(g, x0, x1, eps):
     """Zero finding of function g with the bisect methode.
 
