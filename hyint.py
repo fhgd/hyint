@@ -99,7 +99,9 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
             k_min = 1.0
             event = None
             for ev in events:
-                ev_local = lambda k: ev(t[-2] + k*dt, x[-2] + (x[-1] - x[-2])*k, y[-1])
+                def ev_local(k):
+                    x_21 = odestep(f, t[-2], k*dt, x[-2], y[-2])
+                    return ev(t[-2] + k*dt, x_21, y[-2])
                 k0, k1 = fsolve(ev_local, 0.0, 1.0, eps)
                 # Use k1 which terminates the actual process
                 if k1 <= k_min:
