@@ -5,6 +5,51 @@ ToDo:
 
 * Add warning, when the ode has only one time step between the FSM transitions
 
+* Replace graph[z].iterkeys() and graph[z][event] with
+
+    znew, events = fsm(z, ev)
+
+    def fsm(z, ev):
+        znew = graph[z][ev]
+        events = graph[znew].iterkeys()
+        return znew, events
+
+* Parallel FSM:
+
+    def make_fsm(graphs):
+        def fsm(Z, ev):
+            '''Return the new state and event list for all FSMs in a dict
+
+                Znew = {z1 : events, z2 : events, ...}
+            '''
+            Znew = dict((g[z][ev], g[znew].iterkeys()) for g, z in zip(graphs, Z))
+            return Znew
+        return fsm
+
+
+* Problem-1: The events from different FSMs could be true at the same time
+
+* Problem-2: How to deal with the setting of new init values?
+
+    x0 = z1(x)
+    x0 = z2(x)
+    ...
+
+  Each fsm should only set his own components in x! Then the succesive
+  setting of the new init values is (should be) no problem. But the different
+  x0 must be merge in a good way. Maybe
+
+    x0 = z1(x), z2(x), ...
+
+  should be good enough. Or with a dict:
+
+    z1(x) = {x1 : ?, x2 : ?}
+    z2(x) = {x3 : ?, x4 : ?}
+
+    x0 = x.update(z1(x), z2(x))
+
+
+  Maybe use namedtuple as vectors?
 """
 
 def fsolve(g, x0, x1, eps):
