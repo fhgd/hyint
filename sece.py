@@ -38,7 +38,7 @@ C  = ga**2 / k
 # Simulation parameters
 t0 = 0.0
 freq = 172.7
-t1 = 50/freq                    # Simulate until the system gets statinary
+t1 = 20/freq                    # Simulate until the system gets statinary
 dt = 1.0 / freq / 100
 eps = 1e-15
 
@@ -54,7 +54,7 @@ def f(t, x, y):
     dU  = Iq / Cp
     return array([dIq, dUC, dU])
 
-def ev_harvest(t, x):
+def ev_harvest(t, x, y):
     """The harvesting event occurs when the voltage U has an extremum. This is
     equivalent with I_Cp = Iq = 0. To distinguish the positive and negative
     zero crossing, the event function becomes Iq * sign(U) <= 0."""
@@ -63,9 +63,9 @@ def ev_harvest(t, x):
 
 def CHARGE(t, x, y):
     """The SECE principle could modeled with only one FSM state CHARGE. After
-    every extremum of the output voltage U is reseted to zero. Also the 
+    every extremum of the output voltage U is reseted to zero. Also the
     current Iq is set to zero avoiding numerical problems. Additional the
-    time discrete state vector saves the energy E transfered through the 
+    time discrete state vector saves the energy E transfered through the
     output and every extremum of the voltage U."""
     Iq, UC, U = x
     E, Umax = y                                 # time discrete state vector
@@ -91,30 +91,24 @@ Pmax = UqPeak**2 / (8*R)
 print 'Pmax  =', Pmax
 print 'Pmean / Pmax =', Pmean / Pmax
 
+if __name__ == '__main__':
 
-def rplot(Iq, UC, U, E):
     """Plot the results."""
-    from pylab import subplot, plot, ylabel, gcf, setp, show
+    from pylab import *
 
-    ax1 = subplot(411)
-    plot(t, Iq)
-    ylabel('Iq')
-
-    subplot(412, sharex=ax1)
-    plot(t, UC)
-    ylabel('UC')
-
-    subplot(413, sharex=ax1)
+    ax1 = subplot(211)
     plot(t, U)
-    ylabel('U')
+    ylabel('Up')
 
-    subplot(414, sharex=ax1)
-    plot(t, E)
-    ylabel('E')
+    subplot(212, sharex=ax1)
+    plot(t, array(E)*1e6)
+    ylabel('E/uJ')
 
+    xlabel('t/s')
     for ax in gcf().axes:
         ax.grid(True)
         setp(ax.get_yaxis().label, rotation='horizontal')
-    show()
 
-rplot(Iq, UC, U, E)
+
+    savefig('sece.png')
+    show()
