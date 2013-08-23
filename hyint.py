@@ -117,7 +117,7 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
             while 1:
                 z = graph[z][event]
                 if debug:
-                    print z.__name__
+                    print event.__name__, '=>', z.__name__
                 x_new, y_new = z(t[-1], x[-1], y[-1])
                 x.append(x_new)
                 y.append(y_new)
@@ -127,7 +127,8 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
                 if events:
                     event = events[0]
                     assert len(events) == 1, \
-                        'More then one active event after a FSM transaction.'
+                        'More then one active event after a FSM transaction:\n    %s' \
+                        % ', '.join([f.__name__ for f in events])
                 else:
                     break
         # integrate one time step
