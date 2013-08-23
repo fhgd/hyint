@@ -114,7 +114,10 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
             if debug:
                 print 't = %.15f : located  %s' % (t[-1], event.__name__)
             # transition and action of the FSM until all events are off
+            N = 0
             while 1:
+                N = N + 1
+                assert N < 10, 'More the 10 FSM tansitions at the same time.'
                 z = graph[z][event]
                 if debug:
                     print event.__name__, '=>', z.__name__
