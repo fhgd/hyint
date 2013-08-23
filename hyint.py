@@ -3,6 +3,10 @@
 """
 ToDo:
 
+* store not the state x, but only output y = Cx due to memory issue
+
+* Do the saving outside, remaining if crashed
+
 * Add warning, when the ode has only one time step between the FSM transitions
 
 * Replace graph[z].iterkeys() and graph[z][event] with
@@ -48,8 +52,31 @@ ToDo:
 
     x0 = x.update(z1(x), z2(x))
 
-
   Maybe use namedtuple as vectors?
+
+  Or each FSM should have his own ODE which could be empty?
+  (And each ODE shoulf have his own FSM which could be empty?)
+
+  In general: Each FSM could read all variables but should have his own set
+  of writeable variables (inital conditions and time discrete vars).
+
+    So, maybe for now, only the firste FSM can change the initial values
+    of the ODE. The other FSM acting on theire own time discrete variables:
+
+        x0, y1 = z1(x, y1, ...)
+        y2 = z2(x, y2, ...)
+
+    or
+        x0 = z1(x, y1, ...)
+        y2 = z2(x, y2, ...)
+
+
+* General structure of functions?
+
+    def STATE(x, params):
+        return xnew
+
+
 """
 
 def fsolve(g, x0, x1, eps):
