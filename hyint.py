@@ -21,6 +21,16 @@ def fsolve(g, x0, x1, eps):
             g0 = gm
     return x0, x1
 
+def odestep(f, t, dt, x, y):
+    """One time step dt with Runge-Kutta fourth order"""
+    dt_2 = dt*0.5
+    t_dt_2 = t + dt_2
+    k1 = f(t, x, y)
+    k2 = f(t_dt_2, x + k1*dt_2, y)
+    k3 = f(t_dt_2, x + k2*dt_2, y)
+    k4 = f(t + dt, x + k3*dt, y)
+    return x + (k1 + 2*(k2 + k3) + k4)*dt*0.16666666666666666
+
 def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
     """Integration of a hybrid system within the time interval [t0, t1].
 
@@ -118,14 +128,9 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
                         'More then one active event after a FSM transaction.'
                 else:
                     break
-        # integrate with Runge-Kutta fourth order
-        t_, x_, y_ = t[-1], x[-1], y[-1]
-        k1 = f(t_, x_, y_)
-        k2 = f(t_ + dt/2.0, x_ + k1*dt/2.0, y_)
-        k3 = f(t_ + dt/2.0, x_ + k2*dt/2.0, y_)
-        k4 = f(t_ + dt, x_ + k3*dt, y_)
-        x.append(x_ + (k1 + 2*(k2 + k3) + k4)*dt/6.0)
-        t.append(t_ + dt)
+        # integrate one time step
+        x.append(odestep(f, t[-1], dt, x[-1], y[-1]))
+        t.append(t[-1] + dt)
         # constant extension of the time discrete vaules
         y.append(y[-1])
     return t, x, y
