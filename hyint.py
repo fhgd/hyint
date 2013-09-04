@@ -109,7 +109,7 @@ def hyint(f, x0, t0, t1, dt, graph, z0, eps, y0, debug=False):
                     event = ev
             assert event, 'No zero was found in [0, 1]'
             # correct the last integration step, which was too far
-            x[-1] = x[-2] + (x[-1] - x[-2])*k_min
+            x[-1] = odestep(f, t[-2], k_min*dt, x[-2], y[-2])
             t[-1] = t[-2] + k_min*dt
             if debug:
                 print 't = %.15f : located  %s' % (t[-1], event.__name__)
