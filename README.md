@@ -8,10 +8,10 @@ hyint is a pure python module for integration of a hybrid system (aka Analog-Mix
 
 SECE stands for: Synchronous electrical charge extraction which do two things:
 
-    1. Leave the harvester in open circuit
-    2. When the generator voltage U has an extremum, then immediately
-    discharge the piezo capacitor Cp. (Idealy, this discharge doesn't
-    take any time.)
+1. Leave the harvester in open circuit
+2. When the generator voltage U has an extremum, then immediately
+discharge the piezo capacitor Cp. (Idealy, this discharge doesn't
+take any time.)
 
 The SECE interface is modeled with a simple finite state machine (FSM)
 and the piezo harvester is modeled with a circuit model
@@ -26,6 +26,7 @@ and the piezo harvester is modeled with a circuit model
 
 The simulation result shows the periodic steady state of the total system
 
+![SECE simulation](./sece.png)
 
 ----
 
