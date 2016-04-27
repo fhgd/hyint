@@ -29,7 +29,7 @@ def ev_top(t, x, y):
     return v
 
 
-SECEgraph = {                   # FSM graph
+graph = {                       # FSM graph
     FALL : {ev_bottom : RISE},
     RISE : {ev_top    : FALL},
 }
@@ -45,7 +45,7 @@ eps = 1e-3
 
 if __name__ == '__main__':
     # Run the simulation
-    t, x, y = hyint(f, x0, t0, t1, dt, SECEgraph, z0, eps, y0)
+    t, x, y = hyint(f, x0, t0, t1, dt, graph, z0, eps, y0)
 
     # Transpose the results
     h, v = zip(*x)
