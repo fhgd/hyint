@@ -98,6 +98,9 @@ if __name__ == '__main__':
     # Plot the results
     from pylab import *
 
+    inch = 2.54
+    figure(figsize=(16/inch, 8/inch))
+    subplots_adjust(bottom=0.2)
     plot(t, U)
     ylabel('Upiezo / V')
     xlabel('t / s')
