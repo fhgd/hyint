@@ -1,7 +1,7 @@
 # hyint
 
 hyint is a pure python module for integration of a hybrid system which
-consists of an analog and a discrete part.
+consists of contineous time part and a discrete event part.
 
 ----
 
