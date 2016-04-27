@@ -38,7 +38,7 @@ C  = ga**2 / k
 # Simulation parameters
 t0 = 0.0
 freq = 172.7
-t1 = 20/freq                    # Simulate until the system gets statinary
+t1 = 10/freq
 dt = 1.0 / freq / 100
 eps = 1e-15
 
@@ -72,43 +72,35 @@ def CHARGE(t, x, y):
     E_new = E + Cp/2 * U**2
     return array([0.0, UC, 0.0]), array([E_new, U])
 
-SECEgraph = {CHARGE : {ev_harvest : CHARGE}}    # FSM graph
-z0 = CHARGE                                     # Init FSM state
-x0 = array([0, 0, 0])                           # Init values for Iq, UC, U
-y0 = array([0, 0])                              # Init values for E, Umax
-
-# Run the simulation
-t, x, y = hyint(f, x0, t0, t1, dt, SECEgraph, z0, eps, y0)
-# Transpose the results
-Iq, UC, U = zip(*x)
-E, Umax = zip(*y)
-
-# If the system gets stationary, the last Umax is related to the averaged power
-Pmean = Cp/2 * Umax[-1]**2 * 2*freq
-print 'Pmean =', Pmean
-# The maximum output power in the case of impedance matching
-Pmax = UqPeak**2 / (8*R)
-print 'Pmax  =', Pmax
-print 'Pmean / Pmax =', Pmean / Pmax
+SECEgraph = {                           # FSM graph
+    CHARGE : {ev_harvest : CHARGE},
+}
+z0 = CHARGE                             # Init FSM state
+x0 = array([0, 0, 0])                   # Init values for Iq, UC, U
+y0 = array([0, 0])                      # Init values for E, Umax
 
 if __name__ == '__main__':
+    # Run the simulation
+    t, x, y = hyint(f, x0, t0, t1, dt, SECEgraph, z0, eps, y0)
+    # Transpose the results
+    Iq, UC, U = zip(*x)
+    E, Umax = zip(*y)
 
-    """Plot the results."""
+    # If the system gets stationary, the last Umax is
+    # related to the averaged power
+    Pmean = Cp/2 * Umax[-1]**2 * 2*freq
+    print 'Pmean =', Pmean
+    # The maximum output power in the case of impedance matching
+    Pmax = UqPeak**2 / (8*R)
+    print 'Pmax  =', Pmax
+    print 'Pmean / Pmax =', Pmean / Pmax
+
+    # Plot the results
     from pylab import *
 
-    ax1 = subplot(211)
     plot(t, U)
-    ylabel('Up')
+    ylabel('Upiezo / V')
+    xlabel('t / s')
 
-    subplot(212, sharex=ax1)
-    plot(t, array(E)*1e6)
-    ylabel('E/uJ')
-
-    xlabel('t/s')
-    for ax in gcf().axes:
-        ax.grid(True)
-        setp(ax.get_yaxis().label, rotation='horizontal')
-
-
-    savefig('sece.png')
+    savefig('piezo_sece.png')
     show()

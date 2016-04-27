@@ -1,10 +1,33 @@
 # hyint
 
-hyint is a pure python module for integration of a hybrid system (aka Analog-Mixed-Signal system).
+hyint is a pure python module for integration of a hybrid system which
+consists of an analog and a discrete part.
 
 ----
 
-# Example: Piezo Harvester with the SECE Interface
+# Example 1: Bouncing Ball
+
+A falling ball with the heigth h and the velocity v is modeled with
+the ODE system
+
+    dv/dt = -9.81
+    dh/dt = v
+
+If the ball hits the ground (h <= 0) then velocity is inverted and scaled
+with a loss factor
+
+    v_new = -0.8 · v
+
+In order to avoid multiple bouncing event detections a dummy state is
+needed when the ball is at its peak position. The complete source can be
+seen in [bball.py](./bball.py)
+
+![Bouncing Ball](./bball.png)
+
+
+----
+
+# Example 2: Piezo Harvester with the SECE Interface
 
 SECE stands for: Synchronous electrical charge extraction which do two things:
 
@@ -24,9 +47,7 @@ and the piezo harvester is modeled with a circuit model
     '----------------------+-----o
 ```
 
-The simulation result shows the periodic steady state of the total system
-
-![SECE simulation](./sece.png)
+![SECE simulation](./piezo_sece.png)
 
 ----
 
